@@ -1,0 +1,27 @@
+!
+! Interface Configuration
+!
+{% for interface in interfaces %}
+interface {{ interface.name }}
+ description {{ interface.description | default('') }}
+ {% if interface.ip_address is defined %}
+ ip address {{ interface.ip_address }} {{ interface.subnet_mask }}
+ {% endif %}
+ {% if interface.isis_enabled | default(false) %}
+ ip router isis
+ isis circuit-type level-2-only
+ isis network point-to-point
+ {% endif %}
+ no shutdown
+!
+{% endfor %}
+
+{% if isis_interfaces is defined %}
+router isis
+ net {{ isis_net }}
+ is-type level-2-only
+ {% for interface in isis_interfaces %}
+ passive-interface {{ interface }}
+ {% endfor %}
+!
+{% endif %} 

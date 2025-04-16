@@ -1,0 +1,110 @@
+---
+# Basic Settings
+hostname: CORE-NX-01
+timestamp: "2024-02-20 10:00:00 UTC"
+admin_user: admin
+admin_password: "$1$xyz$ENCRYPTED_PASSWORD"
+
+# VRF Configuration
+vrfs:
+  - name: management
+    rd: 65000:1
+    route_targets:
+      - route-target both 65000:1
+  - name: PROD
+    rd: 65000:100
+    route_targets:
+      - route-target both 65000:100
+  - name: DEV
+    rd: 65000:200
+    route_targets:
+      - route-target both 65000:200
+
+# VLAN Configuration
+vlans:
+  - id: 10
+    name: PROD-DB
+    type: data
+  - id: 20
+    name: PROD-APP
+    type: data
+  - id: 30
+    name: DEV-DB
+    type: data
+  - id: 40
+    name: DEV-APP
+    type: data
+  - id: 100
+    name: MGMT
+    type: data
+
+# VPC Configuration
+vpc_config:
+  - domain_id: 10
+    peer_ip: 10.255.255.2
+    source_ip: 10.255.255.1
+    vrf: management
+
+# Interface Configuration
+interfaces:
+  - name: Ethernet1/1
+    description: VPC Peer-link Member 1
+    type: vpc-peer
+  - name: Ethernet1/2
+    description: VPC Peer-link Member 2
+    type: vpc-peer
+  - name: Port-Channel10
+    description: VPC to Distribution Switch 1
+    type: vpc-member
+    allowed_vlans: 10,20,30,40,100
+    vpc_id: 10
+  - name: Ethernet1/3
+    description: L3 Link to ASR-CORE-01
+    type: routed
+    ip_address: 10.1.1.9
+    prefix_length: 30
+    ospf:
+      process_id: 1
+      area: 0
+  - name: Vlan100
+    description: Management SVI
+    type: routed
+    ip_address: 192.168.100.3
+    prefix_length: 24
+    vrf: management
+
+# OSPF Configuration
+ospf_processes:
+  - process_id: 1
+    router_id: 192.168.100.3
+    networks:
+      - address: 10.1.1.8
+        wildcard: 0.0.0.3
+        area: 0
+      - address: 192.168.100.0
+        wildcard: 0.0.0.255
+        area: 0
+
+# BGP Configuration
+bgp_config:
+  as_number: 65000
+  router_id: 192.168.100.3
+  neighbors:
+    - ip: 10.1.1.10
+      remote_as: 65000
+      description: ASR-CORE-01
+
+# SNMP Configuration
+snmp_enabled: true
+snmp_community: public_ro
+snmp_location: "Main Data Center - Row C"
+snmp_contact: "noc@example.com"
+
+# NTP Configuration
+ntp_servers:
+  - 192.168.100.10
+  - 192.168.100.11
+
+# Console and VTY Settings
+console_timeout: 10
+vty_timeout: 5 

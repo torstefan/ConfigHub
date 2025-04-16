@@ -1,0 +1,110 @@
+!Command: show running-config
+!Time: {{ timestamp }}
+version 9.3(8)
+hostname {{ hostname }}
+!
+feature interface-vlan
+feature hsrp
+feature lacp
+feature vpc
+feature ospf
+feature bgp
+!
+no password strength-check
+!
+username {{ admin_user }} password {{ admin_password }} role network-admin
+!
+ntp server {{ ntp_servers[0]} prefer
+{% for server in ntp_servers[1:] %}
+ntp server {{ server }}
+{% endfor %}
+!
+{% if snmp_enabled %}
+snmp-server contact {{ snmp_contact }}
+snmp-server location {{ snmp_location }}
+snmp-server community {{ snmp_community }} group network-operator
+{% endif %}
+!
+{% for vrf in vrfs %}
+vrf context {{ vrf.name }}
+{% if vrf.rd %}
+  rd {{ vrf.rd }}
+{% endif %}
+{% for route_target in vrf.route_targets %}
+  {{ route_target }}
+{% endfor %}
+!
+{% endfor %}
+!
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+  name {{ vlan.name }}
+{% if vlan.type is defined %}
+  vlan-type {{ vlan.type }}
+{% endif %}
+!
+{% endfor %}
+!
+{% for vpc in vpc_config %}
+vpc domain {{ vpc.domain_id }}
+  peer-keepalive destination {{ vpc.peer_ip }} source {{ vpc.source_ip }} vrf {{ vpc.vrf }}
+  peer-gateway
+  auto-recovery
+!
+{% endfor %}
+!
+{% for interface in interfaces %}
+interface {{ interface.name }}
+  description {{ interface.description }}
+{% if interface.type == 'vpc-peer' %}
+  switchport mode trunk
+  spanning-tree port type network
+  vpc peer-link
+{% elif interface.type == 'vpc-member' %}
+  switchport mode trunk
+  switchport trunk allowed vlan {{ interface.allowed_vlans }}
+  vpc {{ interface.vpc_id }}
+{% elif interface.type == 'routed' %}
+  no switchport
+  ip address {{ interface.ip_address }}/{{ interface.prefix_length }}
+{% if interface.vrf %}
+  vrf member {{ interface.vrf }}
+{% endif %}
+{% if interface.ospf %}
+  ip router ospf {{ interface.ospf.process_id }} area {{ interface.ospf.area }}
+{% endif %}
+{% endif %}
+  no shutdown
+!
+{% endfor %}
+!
+{% for ospf in ospf_processes %}
+router ospf {{ ospf.process_id }}
+{% if ospf.router_id %}
+  router-id {{ ospf.router_id }}
+{% endif %}
+{% for network in ospf.networks %}
+  network {{ network.address }} {{ network.wildcard }} area {{ network.area }}
+{% endfor %}
+!
+{% endfor %}
+!
+{% if bgp_config %}
+router bgp {{ bgp_config.as_number }}
+  router-id {{ bgp_config.router_id }}
+{% for neighbor in bgp_config.neighbors %}
+  neighbor {{ neighbor.ip }} remote-as {{ neighbor.remote_as }}
+{% if neighbor.description %}
+    description {{ neighbor.description }}
+{% endif %}
+{% endfor %}
+!
+{% endif %}
+!
+line console
+  exec-timeout {{ console_timeout }}
+line vty
+  exec-timeout {{ vty_timeout }}
+  session-limit 16
+!
+end 

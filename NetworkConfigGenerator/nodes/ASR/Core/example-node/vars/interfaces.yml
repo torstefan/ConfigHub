@@ -1,0 +1,31 @@
+interfaces:
+- description: Router ID and Management
+  ip_address: 10.1.1.1
+  isis_circuit_type: level-2-only
+  isis_metric: 10
+  name: Loopback10
+  subnet_mask: 255.255.255.255
+- bandwidth: 1000000
+  description: Core Link to ASR-CORE-02
+  ip_address: 10.0.12.1
+  isis_circuit_type: level-2-only
+  isis_metric: 10
+  isis_network_type: point-to-point
+  mtu: 9000
+  name: GigabitEthernet0/0/0
+  subnet_mask: 255.255.255.252
+- bandwidth: 10000000
+  description: Distribution Link to DIST-SW-03
+  ip_address: 10.0.21.1
+  isis_circuit_type: level-2-only
+  isis_metric: 10
+  isis_network_type: broadcast
+  mtu: 9000
+  name: TenGigabitEthernet0/1/3
+  subnet_mask: 255.255.255.252
+isis_interfaces:
+- Loopback0
+- GigabitEthernet0/0/0
+- GigabitEthernet0/0/1
+- TenGigabitEthernet0/1/3
+isis_net: 49.0001.0000.0000.0001.00

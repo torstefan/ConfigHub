@@ -1,0 +1,48 @@
+---
+all:
+  children:
+    core_switches:
+      hosts:
+        CORE-NX-01:
+          ansible_host: 192.168.100.3
+          ansible_network_os: nxos
+          ansible_connection: network_cli
+          ansible_user: admin
+          ansible_password: "{{ vault_ansible_password }}"
+          mgmt_ip: 192.168.100.3
+          location: "Main Data Center - Row C"
+          role: core_switch
+          model: Nexus-9300
+          os_version: "9.3.8"
+          verify_variables:
+            - name: verify_vpc
+              vpc_ids:
+                - 10  # VPC to Distribution Switch
+            - name: verify_ip
+              interfaces:
+                - Ethernet1/3
+                - Vlan100
+          vpc_peer:
+            device: CORE-NX-02
+            peer_link:
+              - Ethernet1/1
+              - Ethernet1/2
+            keepalive_source: 10.255.255.1
+            keepalive_dest: 10.255.255.2
+          connections:
+            - device: ASR-CORE-01
+              interface: Ethernet1/3
+              remote_interface: GigabitEthernet0/0/1
+              type: routed
+            - device: DIST-SW-01
+              interface: Port-Channel10
+              remote_interface: Port-Channel10
+              type: vpc
+              vpc_id: 10
+          vrfs:
+            - name: management
+              rd: 65000:1
+            - name: PROD
+              rd: 65000:100
+            - name: DEV
+              rd: 65000:200 

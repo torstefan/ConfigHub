@@ -1,0 +1,47 @@
+!
+! Interface Configuration
+!
+
+interface Loopback10
+ description Router ID and Management
+ 
+ ip address 10.1.1.1 255.255.255.255
+ 
+ 
+ no shutdown
+!
+
+interface GigabitEthernet0/0/0
+ description Core Link to ASR-CORE-02
+ 
+ ip address 10.0.12.1 255.255.255.252
+ 
+ 
+ no shutdown
+!
+
+interface TenGigabitEthernet0/1/3
+ description Distribution Link to DIST-SW-03
+ 
+ ip address 10.0.21.1 255.255.255.252
+ 
+ 
+ no shutdown
+!
+
+
+
+router isis
+ net 49.0001.0000.0000.0001.00
+ is-type level-2-only
+ 
+ passive-interface Loopback0
+ 
+ passive-interface GigabitEthernet0/0/0
+ 
+ passive-interface GigabitEthernet0/0/1
+ 
+ passive-interface TenGigabitEthernet0/1/3
+ 
+!
+ 

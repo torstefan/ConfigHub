@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .editor-container {
+        display: flex;
+        height: calc(100vh - 200px);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .editor-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-header {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .editor-path {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .editor {
+        flex: 1;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .template-name-input {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    
+    .missing-var {
+        background-color: #fff3cd;
+    }
+    
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .validation-message {
+        color: #dc3545;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="toolbar">
+        <div>
+            <button id="saveButton" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button id="backButton" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Back to Configuration
+            </button>
+        </div>
+        <div id="saveStatus" class="text-muted"></div>
+    </div>
+
+    {% if is_new_template %}
+    <div class="mb-3">
+        <input type="text" id="templateName" class="template-name-input" 
+               placeholder="Enter template name (without extension)" value="{{ template_name }}">
+    </div>
+    {% endif %}
+
+    <div class="editor-container">
+        <!-- Template Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-header">
+                <h5 class="mb-1">Jinja2 Template</h5>
+                <div class="editor-path" id="templatePath">{{ template_path }}</div>
+            </div>
+            <div class="editor" id="templateEditor"></div>
+        </div>
+
+        <!-- Variables Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-header">
+                <h5 class="mb-1">YAML Variables</h5>
+                <div class="editor-path" id="variablesPath">{{ variables_path }}</div>
+            </div>
+            <div class="editor" id="variablesEditor"></div>
+            <div id="validationMessages"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/mode-jinja2.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.0/mode-yaml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+<script>
+// Initialize Ace editors
+const templateEditor = ace.edit("templateEditor");
+templateEditor.setTheme("ace/theme/textmate");
+templateEditor.session.setMode("ace/mode/jinja2");
+templateEditor.setOptions({
+    fontSize: "14px",
+    showPrintMargin: false,
+    highlightActiveLine: true
+});
+
+const variablesEditor = ace.edit("variablesEditor");
+variablesEditor.setTheme("ace/theme/textmate");
+variablesEditor.session.setMode("ace/mode/yaml");
+variablesEditor.setOptions({
+    fontSize: "14px",
+    showPrintMargin: false,
+    highlightActiveLine: true
+});
+
+// Load initial content
+{% if template_content %}
+templateEditor.setValue({{ template_content|tojson }}, -1);
+{% endif %}
+{% if variables_content %}
+variablesEditor.setValue({{ variables_content|tojson }}, -1);
+{% endif %}
+
+// Variable validation
+let variableCheckTimeout;
+function validateVariables() {
+    clearTimeout(variableCheckTimeout);
+    variableCheckTimeout = setTimeout(() => {
+        try {
+            const templateContent = templateEditor.getValue();
+            const variablesContent = variablesEditor.getValue();
+            const variables = jsyaml.load(variablesContent);
+            
+            // Get all loop variables to exclude them
+            const loopVars = new Set();
+            const lines = templateContent.split('\n');
+            for (const line of lines) {
+                const trimmed = line.trim();
+                // Use indexOf instead of startsWith/includes to avoid template syntax
+                const startBrace = trimmed.indexOf('{');
+                const percentSign = trimmed.indexOf('%', startBrace);
+                if (startBrace === 0 && percentSign === 1) {
+                    const forIndex = trimmed.indexOf(' for ');
+                    const inIndex = trimmed.indexOf(' in ');
+                    if (forIndex > 0 && inIndex > forIndex) {
+                        const varName = trimmed.substring(forIndex + 5, inIndex).trim();
+                        loopVars.add(varName);
+                    }
+                }
+            }
+            
+            // Extract variables from template using regex
+            const leftBrace = '{';
+            const varRegex = new RegExp(leftBrace + leftBrace + '\\s*(\\w+)\\s*}}', 'g');
+            const matches = templateContent.matchAll(varRegex);
+            const templateVars = new Set();
+            
+            // Add variables that aren't loop variables
+            for (const match of matches) {
+                const varName = match[1];
+                if (!loopVars.has(varName)) {
+                    templateVars.add(varName);
+                }
+            }
+            
+            // Check for missing variables
+            const missingVars = [];
+            for (const varName of templateVars) {
+                if (!(varName in variables)) {
+                    missingVars.push(varName);
+                }
+            }
+            
+            // Show validation messages
+            const validationDiv = document.getElementById('validationMessages');
+            if (missingVars.length > 0) {
+                validationDiv.innerHTML = `
+                    <div class="validation-message">
+                        Missing variables in YAML: ${missingVars.join(', ')}
+                    </div>
+                `;
+            } else {
+                validationDiv.innerHTML = '';
+            }
+        } catch (e) {
+            console.error('Validation error:', e);
+        }
+    }, 1000);
+}
+
+// Add change listeners for validation
+templateEditor.session.on('change', validateVariables);
+variablesEditor.session.on('change', validateVariables);
+
+// Save functionality
+document.getElementById('saveButton').onclick = () => {
+    const saveButton = document.getElementById('saveButton');
+    const saveStatus = document.getElementById('saveStatus');
+    
+    saveButton.disabled = true;
+    saveStatus.textContent = 'Saving...';
+    
+    const data = {
+        template_content: templateEditor.getValue(),
+        variables_content: variablesEditor.getValue(),
+        template_name: {% if is_new_template %}document.getElementById('templateName').value{% else %}'{{ template_name }}'{% endif %}
+    };
+    
+    fetch('{{ url_for("config.save_template", node_path=node_path) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        saveStatus.textContent = 'Changes saved successfully';
+        setTimeout(() => {
+            saveStatus.textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        saveStatus.textContent = 'Error saving changes';
+        console.error('Save error:', error);
+    })
+    .finally(() => {
+        saveButton.disabled = false;
+    });
+};
+
+// Back button functionality
+document.getElementById('backButton').onclick = () => {
+    window.location.href = '{{ url_for("config.index") }}';
+};
+
+// Initial validation
+validateVariables();
+</script>
+{% endblock %} 

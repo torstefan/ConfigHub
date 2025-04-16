@@ -1,0 +1,104 @@
+!
+! Last configuration change at {{ timestamp }}
+!
+hostname {{ hostname }}
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+! VTP Configuration
+vtp domain {{ vtp_domain }}
+vtp mode transparent
+!
+spanning-tree mode {{ stp_mode }}
+spanning-tree extend system-id
+{% if stp_mode == 'rapid-pvst' %}
+spanning-tree vlan 1-4094 priority {{ stp_priority }}
+{% endif %}
+!
+! VLAN Configuration
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+ name {{ vlan.name }}
+{% endfor %}
+!
+! Interface Configuration
+{% for interface in interfaces %}
+interface {{ interface.name }}
+ description {{ interface.description }}
+{% if interface.type == 'trunk' %}
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan {{ interface.allowed_vlans }}
+{% if interface.native_vlan is defined %}
+ switchport trunk native vlan {{ interface.native_vlan }}
+{% endif %}
+{% elif interface.type == 'access' %}
+ switchport mode access
+ switchport access vlan {{ interface.vlan }}
+{% elif interface.type == 'routed' %}
+ no switchport
+ ip address {{ interface.ip_address }} {{ interface.subnet_mask }}
+{% if interface.ospf %}
+ ip ospf {{ interface.ospf.process_id }} area {{ interface.ospf.area }}
+{% endif %}
+{% endif %}
+{% if interface.portfast %}
+ spanning-tree portfast
+{% endif %}
+ no shutdown
+!
+{% endfor %}
+!
+! OSPF Configuration
+{% if ospf_config %}
+router ospf {{ ospf_config.process_id }}
+ router-id {{ ospf_config.router_id }}
+{% for network in ospf_config.networks %}
+ network {{ network.address }} {{ network.wildcard }} area {{ network.area }}
+{% endfor %}
+{% endif %}
+!
+! HSRP Configuration
+{% for hsrp in hsrp_groups %}
+interface {{ hsrp.interface }}
+ standby {{ hsrp.group }} ip {{ hsrp.virtual_ip }}
+ standby {{ hsrp.group }} priority {{ hsrp.priority }}
+ standby {{ hsrp.group }} preempt
+!
+{% endfor %}
+!
+! Management Configuration
+ip domain-name {{ domain_name }}
+ip name-server {{ dns_server }}
+!
+{% if snmp_enabled %}
+snmp-server community {{ snmp_community }} RO
+snmp-server location {{ snmp_location }}
+snmp-server contact {{ snmp_contact }}
+{% endif %}
+!
+! NTP Configuration
+{% for server in ntp_servers %}
+ntp server {{ server }}
+{% endfor %}
+!
+! AAA Configuration
+aaa new-model
+aaa authentication login default local
+aaa authorization exec default local
+!
+! Local User Configuration
+username {{ admin_user }} privilege 15 secret {{ admin_password }}
+!
+! SSH Configuration
+ip ssh version 2
+!
+line con 0
+ exec-timeout {{ console_timeout }} 0
+line vty 0 15
+ exec-timeout {{ vty_timeout }} 0
+ login local
+ transport input ssh
+!
+end 

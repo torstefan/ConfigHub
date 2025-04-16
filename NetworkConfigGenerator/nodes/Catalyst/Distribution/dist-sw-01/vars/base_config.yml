@@ -1,0 +1,91 @@
+---
+# Basic Settings
+hostname: DIST-SW-01
+timestamp: "2024-02-20 10:00:00 UTC"
+
+# VTP and STP Configuration
+vtp_domain: CAMPUS-NET
+stp_mode: rapid-pvst
+stp_priority: 28672  # 28672 = Priority 14
+
+# VLAN Configuration
+vlans:
+  - id: 10
+    name: USER-VLAN-10
+  - id: 20
+    name: USER-VLAN-20
+  - id: 30
+    name: VOICE-VLAN
+  - id: 100
+    name: MGMT-VLAN
+  - id: 200
+    name: SERVER-VLAN
+
+# Interface Configuration
+interfaces:
+  - name: GigabitEthernet1/0/1
+    description: Uplink to ASR-CORE-01
+    type: routed
+    ip_address: 10.1.1.2
+    subnet_mask: 255.255.255.252
+    ospf:
+      process_id: 1
+      area: 0
+  - name: GigabitEthernet1/0/2
+    description: Downlink to Access Switch 1
+    type: trunk
+    allowed_vlans: 10,20,30,100
+    native_vlan: 999
+  - name: GigabitEthernet1/0/3
+    description: Downlink to Access Switch 2
+    type: trunk
+    allowed_vlans: 10,20,30,100
+    native_vlan: 999
+  - name: Vlan100
+    description: Management VLAN Interface
+    type: routed
+    ip_address: 192.168.100.2
+    subnet_mask: 255.255.255.0
+    ospf:
+      process_id: 1
+      area: 0
+
+# OSPF Configuration
+ospf_config:
+  process_id: 1
+  router_id: 192.168.100.2
+  networks:
+    - address: 10.1.1.0
+      wildcard: 0.0.0.3
+      area: 0
+    - address: 192.168.100.0
+      wildcard: 0.0.0.255
+      area: 0
+
+# HSRP Configuration
+hsrp_groups:
+  - interface: Vlan100
+    group: 10
+    virtual_ip: 192.168.100.1
+    priority: 110
+
+# Management Configuration
+domain_name: example.com
+dns_server: 192.168.100.10
+admin_user: admin
+admin_password: "$1$xyz$ENCRYPTED_PASSWORD"
+
+# SNMP Configuration
+snmp_enabled: true
+snmp_community: public_ro
+snmp_location: "Main Data Center - Row B"
+snmp_contact: "noc@example.com"
+
+# NTP Configuration
+ntp_servers:
+  - 192.168.100.10
+  - 192.168.100.11
+
+# Console and VTY Settings
+console_timeout: 10
+vty_timeout: 5 

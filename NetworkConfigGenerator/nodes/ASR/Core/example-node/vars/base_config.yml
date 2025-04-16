@@ -1,0 +1,35 @@
+access_lists:
+  - name: PERMIT_MANAGEMENT
+    rules:
+      - "permit ip host 10.1.1.1 any"
+      - "permit ip host 10.2.2.2 any"
+      - "deny ip any any log"
+  
+  - name: BLOCK_MALICIOUS
+    rules:
+      - "deny ip 192.168.1.0 0.0.0.255 any"
+      - "deny ip host 172.16.5.10 any log"
+      - "permit ip any any"
+  
+  - name: GUEST_ACCESS
+    rules:
+      - "permit tcp any any eq 80"
+      - "permit tcp any any eq 443"
+      - "permit udp any any eq 53"
+      - "deny ip any any"
+console_timeout: 10
+enable_secret: $1$xyz$ENCRYPTED_PASSWORD
+hostname: ASR-CORE-01
+logging_buffer_size: 16384
+ntp_servers:
+- 192.168.1.10
+- 192.168.1.11
+snmp_community: public_ro
+snmp_contact: noc@example.com
+snmp_enabled: true
+snmp_location: Main Data Center - Row A
+syslog_servers:
+- 192.168.1.20
+- 192.168.1.21
+timestamp: 2024-02-20 10:00:00 UTC
+vty_timeout: 5
