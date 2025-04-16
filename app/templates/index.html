@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Home - ConfigHub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-4 mb-3">Welcome to ConfigHub</h1>
+                    <p class="lead">Your centralized platform for network configuration management.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Quick Actions</h2>
+        </div>
+        <div class="col-md-4 offset-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-code fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Configuration</h5>
+                    <p class="card-text">Manage and prepare network configurations</p>
+                    <a href="{{ url_for('config.index') }}" class="btn btn-primary">Go to Configuration</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-server fa-2x me-3 text-primary"></i>
+                                <div>
+                                    <h6 class="mb-0">Git Repository</h6>
+                                    <small class="text-muted">{{ git_status.status }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-database fa-2x me-3 text-success"></i>
+                                <div>
+                                    <h6 class="mb-0">Database</h6>
+                                    <small class="text-muted">Connected</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-network-wired fa-2x me-3 text-info"></i>
+                                <div>
+                                    <h6 class="mb-0">Network Access</h6>
+                                    <small class="text-muted">Available</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt fa-2x me-3 text-warning"></i>
+                                <div>
+                                    <h6 class="mb-0">Security</h6>
+                                    <small class="text-muted">Enabled</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
