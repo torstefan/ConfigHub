@@ -25,25 +25,68 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
+        /* Navbar styling with height fixes */
         .navbar {
             background-color: var(--primary-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 54px !important;
+            min-height: 54px !important;
+            max-height: 54px !important;
+            overflow: visible;
+            padding: 0;            
         }
-        
-        .navbar-brand {
-            font-weight: bold;
+
+        .navbar > .container-fluid {
+            height: 54px !important;
+            min-height: 54px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        .navbar-brand, .nav-link {
             color: white !important;
+            height: 54px !important;
+            line-height: 54px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
         }
-        
+
+        .navbar-nav {
+            height: 54px !important;
+            display: flex;
+            align-items: center;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
         .nav-link {
-            color: rgba(255,255,255,0.8) !important;
-            transition: color 0.3s;
+            opacity: 0.8;
         }
-        
+
         .nav-link:hover {
-            color: white !important;
+            opacity: 1;
         }
-        
+
+        .navbar-collapse {
+            display: flex !important;
+            height: 54px !important;
+        }
+
+        .navbar-toggler {
+            display: none;
+        }
+
+        .navbar .d-flex {
+            height: 54px !important;
+            align-items: center !important;
+        }
+
+        .navbar-brand i, .nav-link i {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
         .card {
             border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -107,32 +150,30 @@
             padding: 1rem 0;
             margin-top: 2rem;
         }
+
+        /* Main content spacing */
+        main.container-fluid {
+            margin-top: 1rem;
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-cogs me-2"></i>ConfigHub
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">
-                            <i class="fas fa-home me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('config.index') }}">
-                            <i class="fas fa-file-code me-1"></i>Configuration
-                        </a>
-                    </li>
-                </ul>
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                    <i class="fas fa-cogs me-2"></i>ConfigHub
+                </a>
+                <div class="navbar-nav ms-0">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                    <a class="nav-link" href="{{ url_for('config.index') }}">
+                        <i class="fas fa-file-code me-1"></i>Configuration
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
