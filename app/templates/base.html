@@ -12,17 +12,46 @@
     <!-- Custom CSS -->
     <style>
         :root {
+            /* Light theme variables */
             --primary-color: #2c3e50;
             --secondary-color: #34495e;
             --accent-color: #3498db;
             --success-color: #2ecc71;
             --warning-color: #f1c40f;
             --danger-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg: #ffffff;
+            --border-color: rgba(0,0,0,0.1);
+            --hover-bg: #e9ecef;
+            --navbar-text: #ffffff;
+            --header-text: #2c3e50;
+            --muted-text: #495057;
+        }
+
+        /* Dark theme variables */
+        [data-theme="dark"] {
+            --primary-color: #1a2634;
+            --secondary-color: #2c3e50;
+            --accent-color: #2980b9;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #c0392b;
+            --bg-color: #1a1a1a;
+            --text-color: #e1e1e1;
+            --card-bg: #2d2d2d;
+            --border-color: rgba(255,255,255,0.1);
+            --hover-bg: #3d3d3d;
+            --navbar-text: #ffffff;
+            --header-text: #ffffff;
+            --header-bg: #3d3d3d;
+            --muted-text: #b0b0b0;
         }
         
         body {
-            background-color: #f8f9fa;
+            background-color: var(--bg-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
         }
         
         /* Navbar styling with height fixes */
@@ -43,7 +72,7 @@
         }
 
         .navbar-brand, .nav-link {
-            color: white !important;
+            color: var(--navbar-text) !important;
             height: 54px !important;
             line-height: 54px !important;
             padding-top: 0 !important;
@@ -87,10 +116,30 @@
             margin-top: 0 !important;
             margin-bottom: 0 !important;
         }
+
+        /* Theme toggle button */
+        #themeToggle {
+            background: none;
+            border: none;
+            color: var(--navbar-text);
+            opacity: 0.8;
+            cursor: pointer;
+            padding: 0 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            height: 54px;
+        }
+
+        #themeToggle:hover {
+            opacity: 1;
+        }
+
         .card {
             border: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             transition: transform 0.2s;
+            background-color: var(--card-bg);
         }
         
         .card:hover {
@@ -98,17 +147,36 @@
         }
         
         .card-header {
-            background-color: white;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--header-text);
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-header h6 {
+            color: var(--header-text);
+            font-weight: 600;
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
         }
         
         .list-group-item {
             border: none;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
         }
         
         .list-group-item:last-child {
             border-bottom: none;
+        }
+        
+        .list-group-item:hover {
+            background-color: var(--hover-bg);
         }
         
         .btn-primary {
@@ -133,10 +201,11 @@
         
         .pre-scrollable {
             max-height: 500px;
-            background-color: #f8f9fa;
-            border: 1px solid rgba(0,0,0,0.1);
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 10px;
+            color: var(--text-color);
         }
         
         .form-control:focus {
@@ -146,7 +215,7 @@
         
         .footer {
             background-color: var(--primary-color);
-            color: white;
+            color: var(--navbar-text);
             padding: 1rem 0;
             margin-top: 2rem;
         }
@@ -154,6 +223,45 @@
         /* Main content spacing */
         main.container-fluid {
             margin-top: 1rem;
+        }
+
+        /* Form labels and text */
+        label, .form-label {
+            color: var(--header-text);
+            font-weight: 500;
+        }
+
+        /* Variables section */
+        .row.mb-2.align-items-center .col-4 {
+            color: var(--muted-text);
+            font-weight: 500;
+        }
+
+        .row.mb-2.align-items-center .col-8 {
+            color: var(--text-color);
+        }
+
+        .value-display {
+            color: var(--text-color);
+        }
+
+        /* Form controls */
+        .form-control {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .form-control:focus {
+            background-color: var(--card-bg);
+            border-color: var(--accent-color);
+            color: var(--text-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        /* Add a subtle highlight to the header in dark mode */
+        [data-theme="dark"] .card-header {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
     </style>
     {% block styles %}{% endblock %}
@@ -175,6 +283,9 @@
                     </a>
                 </div>
             </div>
+            <button id="themeToggle" type="button">
+                <i class="fas fa-moon"></i>
+            </button>
         </div>
     </nav>
 
@@ -214,6 +325,39 @@
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/logger.js') }}"></script>
+    <!-- Theme Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            // Theme toggle handler
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+            
+            // Update icon based on theme
+            function updateThemeIcon(theme) {
+                if (theme === 'dark') {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                }
+            }
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html> 

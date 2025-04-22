@@ -62,8 +62,15 @@ def get_relative_path(full_path):
 @bp.route('/')
 @login_required
 def index():
-    """Main configuration page"""
-    return render_template('config/index.html')
+    # Get the current path from localStorage or use default values
+    current_path = {
+        'family': None,
+        'class': None,
+        'node': None,
+        'templates': []
+    }
+    
+    return render_template('config/index.html', current_path=current_path)
 
 @bp.route('/sync', methods=['POST'])
 @login_required

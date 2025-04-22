@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .preview-section {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .variables-section {
+        margin-bottom: 1rem;
+    }
+    .template-section {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+    }
+    .template-header {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .variable-group {
+        margin-bottom: 1rem;
+    }
+    .variable-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    .variable-value {
+        color: #212529;
+        word-break: break-word;
+    }
+    .config-preview {
+        font-family: 'Courier New', Courier, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .action-buttons {
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+    }
+    .error-message {
+        color: #dc3545;
+        padding: 1rem;
+        background-color: #f8d7da;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Prepare to Deploy</h2>
+            <p class="text-muted">Review and verify your configuration before deployment</p>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% else %}
+    <div class="row">
+        <!-- Node Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Node Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="variable-label">Node Path:</label>
+                        <div class="variable-value">{{ node_path }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="variable-label">Selected Templates:</label>
+                        <div class="variable-value">
+                            {% for template in templates %}
+                            <div>{{ template }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variables -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Variables</h5>
+                </div>
+                <div class="card-body">
+                    {% for template, template_vars in variables.items() %}
+                    <div class="template-section">
+                        <div class="template-header">{{ template }}</div>
+                        {% for key, value in template_vars.items() %}
+                        <div class="variable-group">
+                            <div class="variable-label">{{ key }}</div>
+                            <div class="variable-value">
+                                {% if value is mapping %}
+                                <pre>{{ value | tojson(indent=2) }}</pre>
+                                {% else %}
+                                {{ value }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Preview -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Configuration Preview</h5>
+                </div>
+                <div class="card-body">
+                    {% if config_file %}
+                    <div class="preview-section">
+                        <pre class="config-preview">{{ config_file | safe }}</pre>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        No configuration preview available.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="verifyConfiguration()">
+                    <i class="fas fa-check-circle"></i> Verify Configuration
+                </button>
+                <button class="btn btn-success" onclick="deployConfiguration()">
+                    <i class="fas fa-rocket"></i> Deploy Configuration
+                </button>
+                <a href="{{ url_for('config.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Configuration
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function verifyConfiguration() {
+    const nodePath = "{{ node_path }}";
+    
+    fetch('/deploy/api/verify', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ node_path: nodePath })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configuration verification successful!');
+        } else {
+            alert('Configuration verification failed:\n' + data.output);
+        }
+    })
+    .catch(error => {
+        alert('Error during verification: ' + error.message);
+    });
+}
+
+function deployConfiguration() {
+    const nodePath = "{{ node_path }}";
+    
+    if (!confirm('Are you sure you want to deploy this configuration?')) {
+        return;
+    }
+    
+    fetch('/deploy/api/deploy', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ node_path: nodePath })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Configuration deployed successfully!');
+            window.location.href = "{{ url_for('config.index') }}";
+        } else {
+            alert('Deployment failed:\n' + data.output);
+        }
+    })
+    .catch(error => {
+        alert('Error during deployment: ' + error.message);
+    });
+}
+</script>
+{% endblock %} 

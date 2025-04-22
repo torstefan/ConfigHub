@@ -27,13 +27,16 @@ def create_app(config_class=Config):
     app.register_blueprint(main_bp)
 
     from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
 
     from app.config import bp as config_bp
-    app.register_blueprint(config_bp)
+    app.register_blueprint(config_bp, url_prefix='/config')
+
+    from app.deploy import bp as deploy_bp
+    app.register_blueprint(deploy_bp, url_prefix='/deploy')
 
     from app.api import bp as api_bp
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
 
     # Setup logging
     if not os.path.exists('logs'):
